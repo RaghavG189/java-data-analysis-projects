@@ -11,7 +11,7 @@ package restaurant;
  * @author Mary Buist
  * @author Kushi Sharma
 */
-
+//USE SEPARATE CHAING FOR HASH TABLES FOR THIS ASSIGNMENT
 public class RUHungry {
     
     /*
@@ -75,7 +75,7 @@ public class RUHungry {
      * If index 0 at categoryVar is Appetizers then menuVar at index 0 contains MenuNodes of appetizer dishes.
      * 
      * 1. read the input file:
-     *      a) the first number corresponds to the number of categories (aka length of menuVar and categoryVar)
+     *      a) the first number corresponds to the number of categories (aka length of menuVar and categoryVar) x
      *      b) the next line states the name of the category (populate CategoryVar as you read each category name)
      *      c) the next number represents how many dishes are in that category - this will be the size of the linked list in menuVar for this category
      *      d) the next line states the name of the dish
@@ -90,12 +90,65 @@ public class RUHungry {
      * 
      * @param inputFile - use menu.in file which contains all the dishes
      */
-
+    //Create your own .java files to test methods in this class. Menu.java has already been created as an example to test the menu method. 
     public void menu(String inputFile) {
 
         StdIn.setFile(inputFile); // opens the inputFile to be read
 
-	// WRITE YOUR CODE HERE
+	    // WRITE YOUR CODE HERE
+        int arrayLength = StdIn.readInt(); //Read size for both arrays
+        StdIn.readLine();
+        
+        int dishCount = 0; //num of dishes in category
+
+        categoryVar = new String[arrayLength];
+        menuVar = new MenuNode[arrayLength];
+        
+        
+        for(int i = 0; i < categoryVar.length; i++){
+
+            String categoryName = StdIn.readLine(); //Reads category name
+
+            categoryVar[i] = categoryName; //Stores name into array
+
+            int dishesinCategory = StdIn.readInt(); //gets num of dishes in category
+            
+            while(dishCount < dishesinCategory){
+
+                StdIn.readLine();
+                String dishName = StdIn.readLine(); //Gets dish name
+
+                int numofingredientIDS = StdIn.readInt(); //gets num of ids
+                int[] idArray = new int[numofingredientIDS];
+
+                for(int j = 0; j < numofingredientIDS; j++){ //puts ids in array
+
+                    int ingredientID = StdIn.readInt(); //gets each id
+                    
+                    idArray[j] = ingredientID; //stores each id in array
+
+                }
+
+                Dish dishofCategory = new Dish(categoryName, dishName, idArray);
+                MenuNode dishNode = new MenuNode(dishofCategory, null);
+
+                if(menuVar[i] == null){
+
+                    menuVar[i] = dishNode;
+
+                }else {
+
+                    dishNode.setNextMenuNode(menuVar[i]);
+                    menuVar[i] = dishNode;
+
+                }
+
+                dishCount++;
+                
+            }
+            dishCount = 0;
+            StdIn.readLine();
+        }
 
     }
 
@@ -174,7 +227,24 @@ public class RUHungry {
 
     public void addStockNode ( StockNode newNode ) {
 
-	// WRITE YOUR CODE HERE
+	    // WRITE YOUR CODE HERE
+        int ingredientID = newNode.getIngredient().getID(); //Gets id of ingredient in the stocknode
+
+        int stocknodeIndex = ingredientID % stockVarSize; //Get index
+
+        //Insert node into array at specified index and check insert conditions
+        if(stockVar[stocknodeIndex] == null){
+
+            stockVar[stocknodeIndex] = newNode;
+
+        }else {
+
+            newNode.setNextStockNode(stockVar[stocknodeIndex]);
+            stockVar[stocknodeIndex] = newNode;
+
+        }
+
+
     }
 
     /**
@@ -190,9 +260,26 @@ public class RUHungry {
    
     public StockNode findStockNode (int ingredientID) {
 
-	// WRITE YOUR CODE HERE
+	    // WRITE YOUR CODE HERE
+        int getIndex = ingredientID % stockVarSize;
+
+        StockNode stockPointer = stockVar[getIndex];
+        
+        while(stockPointer != null){
+            if(stockPointer.getIngredient().getID() == ingredientID){
+
+                return stockPointer;
+
+            }else{
+
+                stockPointer = stockPointer.getNextStockNode();
+
+            }
+
+        }
 
         return null; // update the return value
+
     }
 
     /**
@@ -243,6 +330,31 @@ public class RUHungry {
     public void updateStock (String ingredientName, int ingredientID, int stockAmountToAdd) {
 
 	// WRITE YOUR CODE HERE
+        StockNode getStock = null;
+        int currentStockAmt = 0;
+        int updatedStockAmt = 0;
+
+        if(!ingredientName.equals(null)){
+
+            getStock = findStockNode(ingredientID);
+
+            currentStockAmt = getStock.getIngredient().getStockLevel();
+            updatedStockAmt = currentStockAmt + (stockAmountToAdd);
+
+            getStock.getIngredient().setStockLevel(updatedStockAmt);
+
+        }else if(ingredientID != -1){
+
+            getStock = findStockNode(ingredientName);
+
+            currentStockAmt = getStock.getIngredient().getStockLevel();
+            updatedStockAmt = currentStockAmt + stockAmountToAdd;
+
+            getStock.getIngredient().setStockLevel(updatedStockAmt);
+
+        }
+
+
 
     }
 
@@ -267,7 +379,43 @@ public class RUHungry {
 
     public void updatePriceAndProfit() {
 
-	// WRITE YOUR CODE HERE
+	    // WRITE YOUR CODE HERE
+        double dishCost = 0;
+        double dishPrice = 0;
+        MenuNode getMenuNode = null;
+
+        for(int i = 0; i < menuVar.length; i++){
+            getMenuNode = menuVar[i];
+            while(getMenuNode != null){
+
+                Dish getDish = getMenuNode.getDish();
+                int[] getDishIDs = getDish.getStockID();
+
+                for(int j = 0; j < getDishIDs.length; j++){
+
+                    int dishID = getDishIDs[j];
+
+                    StockNode getStock = findStockNode(dishID);
+                    double getingredientCost = getStock.getIngredient().getCost();
+                    
+                    dishCost += getingredientCost;
+
+                }
+                dishPrice = (dishCost * 1.2);
+
+                getMenuNode.getDish().setPriceOfDish(dishPrice);
+                getMenuNode.getDish().setProfit(dishPrice - dishCost);
+
+                getMenuNode = getMenuNode.getNextMenuNode();
+                dishCost = 0;
+                dishPrice = 0;
+
+            }
+
+        }
+
+
+
     }
 
     /**
@@ -301,7 +449,25 @@ public class RUHungry {
         
         StdIn.setFile(inputFile); // opens inputFile to be read by StdIn
 
-	// WRITE YOUR CODE HERE
+	    // WRITE YOUR CODE HERE
+        stockVarSize = StdIn.readInt(); //Gets new size of stockvar
+        stockVar = new StockNode[stockVarSize]; //Updates stockvar with new size
+
+        while(StdIn.hasNextLine()){
+
+        int ingredientID = StdIn.readInt();
+        StdIn.readChar();
+        String ingredientName = StdIn.readLine();
+        double ingredientCost = StdIn.readDouble();
+        int ingredientStock = StdIn.readInt();
+
+        Ingredient ingredientObj = new Ingredient(ingredientID, ingredientName, ingredientStock, ingredientCost);
+
+        StockNode stockIngredient = new StockNode(ingredientObj, null);
+
+        addStockNode(stockIngredient);
+
+        }
 
     }
 
@@ -321,7 +487,26 @@ public class RUHungry {
 
     public void addTransactionNode ( TransactionData data ) { // method adds new transactionNode to the end of LL
 
-	// WRITE YOUR CODE HERE
+	    // WRITE YOUR CODE HERE
+        TransactionNode transactionNode = new TransactionNode(data, null);
+
+        if(transactionVar == null){
+
+            transactionVar = transactionNode;
+
+        }else {
+            TransactionNode Head = transactionVar;
+
+            while(Head.getNext() != null){
+
+                Head = Head.getNext();
+
+            }
+
+            Head.setNext(transactionNode);
+
+        }
+
 	
     }
 
@@ -347,7 +532,28 @@ public class RUHungry {
     public boolean checkDishAvailability (String dishName, int numberOfDishes){
 
 	// WRITE YOUR CODE HERE
-	
+        int enoughofIngredient = 0; //Should equal size of ingredientID array.
+
+        MenuNode getMenu = findDish(dishName);
+        int[] menuingredientIDs = getMenu.getDish().getStockID();
+
+        for(int i = 0; i < menuingredientIDs.length; i++){
+            int ingredientID = menuingredientIDs[i];
+            StockNode getStockNode = findStockNode(ingredientID);
+            int getStockLevel = getStockNode.getIngredient().getStockLevel();
+            if(getStockLevel >= numberOfDishes){
+
+                enoughofIngredient++;
+
+            }
+
+        }
+        if(enoughofIngredient == menuingredientIDs.length){
+
+            return true;
+
+        }
+
         return false; // update the return value
     }
 
@@ -373,7 +579,99 @@ public class RUHungry {
 
     public void order (String dishName, int quantity){
 
-	// WRITE YOUR CODE HERE
+	    // WRITE YOUR CODE HERE
+        MenuNode getMenu = findDish(dishName);
+        double getdishProfit = getMenu.getDish().getProfit(); 
+        String nameofcurrentNode;
+
+        if(checkDishAvailability(dishName, quantity) == true){
+
+            TransactionData transactionData = new TransactionData("order", dishName, quantity, getdishProfit*quantity, true);
+            addTransactionNode(transactionData);
+
+        
+        int[] getStockID = getMenu.getDish().getStockID();
+
+        for(int i = 0; i < getStockID.length; i++){
+            int ingredientID = getStockID[i];
+            StockNode getStock = findStockNode(ingredientID);
+            String ingredientName = getStock.getIngredient().getName();
+            int updatedQuant = quantity * -1;
+            updateStock(ingredientName, ingredientID, (updatedQuant));
+
+        }
+    }else if(checkDishAvailability(dishName, quantity) == false){
+
+        TransactionData transactionData = new TransactionData("order", dishName, quantity, 0, false);
+        addTransactionNode(transactionData);
+
+        MenuNode nextDish = getMenu.getNextMenuNode();
+
+        //Finds index of category and sets starternode to be headnode
+        if(nextDish == null){
+            for(int i = 0; i < menuVar.length; i++){
+                MenuNode ptr = menuVar[i];
+                while(ptr != null){
+                if(ptr.getDish().getName().equals(dishName)){
+
+                    nextDish = menuVar[i];
+                    nameofcurrentNode = nextDish.getDish().getName();
+                    i = menuVar.length;
+                    ptr = null;
+
+                }else{
+
+                ptr = ptr.getNextMenuNode();
+
+                }
+            }
+            }
+
+        }
+
+        //Traverses through the category to find dish that can be made
+        while(nextDish != getMenu){
+            nameofcurrentNode = nextDish.getDish().getName();
+            if(checkDishAvailability(nameofcurrentNode, quantity) == false){
+             
+
+            transactionData = new TransactionData("order", nameofcurrentNode, quantity, 0, false);
+            addTransactionNode(transactionData);
+            nextDish = nextDish.getNextMenuNode();
+
+            
+            }else if(checkDishAvailability(nameofcurrentNode, quantity) == true){
+    
+                order(nameofcurrentNode, quantity);
+                break;
+    
+            }
+            if(nextDish == null){
+                for(int i = 0; i < menuVar.length; i++){
+                    MenuNode ptr = menuVar[i];
+                    while(ptr != null){
+                    if(ptr.getDish().getName().equals(dishName)){
+    
+                        nextDish = menuVar[i];
+                        nameofcurrentNode = nextDish.getDish().getName();
+                        i = menuVar.length;
+                        ptr = null;
+    
+                    }else{
+    
+                    ptr = ptr.getNextMenuNode();
+    
+                    }
+                }
+                }
+    
+            }
+
+        }
+
+
+
+    }
         
     }
 
@@ -389,8 +687,20 @@ public class RUHungry {
     public double profit () {
 
 	// WRITE YOUR CODE HERE
-	
-        return 0.12; // update the return value
+        double totalProfit = 0;
+
+        TransactionNode Ptr = transactionVar;
+
+        while(Ptr != null){
+
+            totalProfit += Ptr.getData().getProfit();
+
+            Ptr = Ptr.getNext();
+
+        }
+
+
+        return totalProfit; // update the return value
     }
 
     /**
@@ -407,7 +717,26 @@ public class RUHungry {
 
     public void donation (String ingredientName, int quantity){
 
-	// WRITE YOUR CODE HERE
+	    // WRITE YOUR CODE HERE
+        StockNode getStockNode = findStockNode(ingredientName);
+        int getingredientStockLevel = getStockNode.getIngredient().getStockLevel();
+        int ingredientID = getStockNode.getIngredient().getID();
+
+        if(profit() > 50 && getingredientStockLevel >= quantity){
+
+            TransactionData transactiondata = new TransactionData("donation", ingredientName, quantity, 0, true);
+            addTransactionNode(transactiondata);
+            int stocktoRemove = (quantity * -1);
+            updateStock(ingredientName, ingredientID, stocktoRemove);
+
+        }else{
+
+            TransactionData transactiondata = new TransactionData("donation", ingredientName, quantity, 0, false);
+            addTransactionNode(transactiondata);
+
+        }
+
+
 
     }
 
@@ -426,7 +755,26 @@ public class RUHungry {
 
     public void restock (String ingredientName, int quantity){
 
-	// WRITE YOUR CODE HERE
+	    // WRITE YOUR CODE HERE
+        StockNode getStockNode = findStockNode(ingredientName);
+        double costofIngredient = getStockNode.getIngredient().getCost();
+        double costtoRestock = costofIngredient * quantity;
+        int ingredientID = getStockNode.getIngredient().getID();
+
+        if(profit() >= costtoRestock){
+
+            TransactionData transactiondata = new TransactionData("restock", ingredientName, quantity, (costtoRestock * -1), true);
+            addTransactionNode(transactiondata);
+            updateStock(ingredientName, ingredientID, quantity);
+
+        }else {
+
+            TransactionData transactiondata = new TransactionData("restock", ingredientName, quantity, 0, false);
+            addTransactionNode(transactiondata);
+
+        }
+
+
     }
 
    /*
